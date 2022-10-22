@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">客户端</string>
+    <string name="input_ip">输入服务端ip</string>
+    <string name="connect">连接</string>
+</resources>
