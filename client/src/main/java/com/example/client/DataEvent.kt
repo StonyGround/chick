@@ -1,5 +1,5 @@
 package com.example.client
 
-data class MessageEvent(
+data class DataEvent(
     var msg: String
 )

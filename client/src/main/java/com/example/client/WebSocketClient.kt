@@ -11,22 +11,22 @@ class WebSocketClient(serverUri: URI?) : org.java_websocket.client.WebSocketClie
 
     override fun onOpen(handshakedata: ServerHandshake) {
         Log.d("WebSocketClient", "onOpen成功连接到：$remoteSocketAddress")
-        EventBus.getDefault().post(MessageEvent(1, "onOpen：$remoteSocketAddress"))
+        EventBus.getDefault().post(MessageEvent( "onOpen：$remoteSocketAddress"))
     }
 
     override fun onMessage(message: String) {
         Log.d("WebSocketClient", "onMessage$message")
-        EventBus.getDefault().post(MessageEvent(2, "$remoteSocketAddress：$message"))
+        EventBus.getDefault().post(DataEvent(message))
     }
 
     override fun onClose(code: Int, reason: String, remote: Boolean) {
         Log.d("WebSocketClient", "onClose")
-        EventBus.getDefault().post(MessageEvent(1, "onClose：$reason"))
+        EventBus.getDefault().post(MessageEvent("onClose：$reason"))
     }
 
     override fun onError(ex: Exception) {
         Log.d("WebSocketClient", "onError")
-        EventBus.getDefault().post(MessageEvent(1, "onError：$ex"))
+        EventBus.getDefault().post(MessageEvent("onError：$ex"))
     }
 
     companion object {

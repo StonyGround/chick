@@ -13,6 +13,5 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "chick"
-include ':app'
 include ':server'
 include ':client'

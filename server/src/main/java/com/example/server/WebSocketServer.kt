@@ -17,27 +17,27 @@ import java.net.InetSocketAddress
 class WebSocketServer internal constructor(host: InetSocketAddress?) : org.java_websocket.server.WebSocketServer(host) {
     override fun onOpen(conn: WebSocket, handshake: ClientHandshake) {
         Log.d("WebSocketServer", "onOpen()：连接到: " + getRemoteSocketAddress(conn))
-        EventBus.getDefault().post(MessageEvent(1, "onOpen：" + getRemoteSocketAddress(conn)))
+        EventBus.getDefault().post(MessageEvent( "onOpen：" + getRemoteSocketAddress(conn)))
     }
 
     override fun onClose(conn: WebSocket, code: Int, reason: String, remote: Boolean) {
         Log.d("WebSocketServer", "onClose")
-        EventBus.getDefault().post(MessageEvent(1, "onClose：$reason"))
+        EventBus.getDefault().post(MessageEvent( "onClose：$reason"))
     }
 
     override fun onMessage(conn: WebSocket, message: String) {
         Log.d("WebSocketServer", "onMessage$message")
-        EventBus.getDefault().post(MessageEvent(2, getRemoteSocketAddress(conn).toString() + message))
+        EventBus.getDefault().post(MessageEvent( getRemoteSocketAddress(conn).toString() + message))
     }
 
     override fun onError(conn: WebSocket, ex: Exception) {
         Log.d("WebSocketServer", "onError$ex")
-        EventBus.getDefault().post(MessageEvent(1, "onError：$ex"))
+        EventBus.getDefault().post(MessageEvent("onError：$ex"))
     }
 
     override fun onStart() {
         Log.d("WebSocketServer", "onStart:" + websocketServer!!.address)
-        EventBus.getDefault().post(MessageEvent(1, "onStart：服务器已就绪"))
+        EventBus.getDefault().post(MessageEvent("onStart：服务器已就绪"))
     }
 
     companion object {
