@@ -8,7 +8,6 @@ import android.os.Looper
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
-import com.blankj.utilcode.util.GsonUtils
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -17,6 +16,7 @@ import org.greenrobot.eventbus.ThreadMode
 class AccessibilityService : AccessibilityService() {
 
 
+    private var nameNode: MutableList<AccessibilityNodeInfo>? = null
     private val TAG: String = "AccessibilityService"
 
     private var name: String? = null
@@ -45,16 +45,14 @@ class AccessibilityService : AccessibilityService() {
 //            val msg = GsonUtils.fromJson(event.msg, MsgBean::class.java)
             val msg = MsgBean("豆粕2301", "买开", "4033", "1")
             Log.d(TAG, "onEvent: $msg")
-            val nameNode = nodeInfo!!.findAccessibilityNodeInfosByViewId("com.shenhuaqihuo.pbmobile:id/tv_contract_name")
             if (!nameNode.isNullOrEmpty()) {
-                Log.d(TAG, "找到nameNode")
-                setTextArgument(nameNode[0], msg.name)
+                setTextArgument(nameNode!![0], msg.name)
             }
 
-            val priceNode = nodeInfo!!.findAccessibilityNodeInfosByViewId("com.shenhuaqihuo.pbmobile:id/edit_price")
-            if (!priceNode.isNullOrEmpty()) {
-                setTextArgument(priceNode[0], msg.price)
-            }
+//            val priceNode = nodeInfo!!.findAccessibilityNodeInfosByViewId("com.shenhuaqihuo.pbmobile:id/edit_price")
+//            if (!priceNode.isNullOrEmpty()) {
+//                setTextArgument(priceNode[0], msg.price)
+//            }
 //
 //            val numNode = nodeInfo!!.findAccessibilityNodeInfosByViewId("com.shenhuaqihuo.pbmobile:id/edit_quantity")
 //            if (!numNode.isNullOrEmpty()) {
@@ -69,7 +67,7 @@ class AccessibilityService : AccessibilityService() {
 
     @SuppressLint("SwitchIntDef")
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        Log.d(TAG, "onAccessibilityEvent $windows")
+//        Log.d(TAG, "onAccessibilityEvent")
         if (event == null) return
         nodeInfo = when {
             event.source != null -> event.source
@@ -82,7 +80,14 @@ class AccessibilityService : AccessibilityService() {
             Log.e(TAG, "nodeInfo is null")
             return
         }
-
+        if (this.nameNode.isNullOrEmpty()) {
+            val nameNode =
+                nodeInfo!!.findAccessibilityNodeInfosByViewId("com.shenhuaqihuo.pbmobile:id/tv_contract_name")
+            Log.d(TAG, "onAccessibilityEvent: $nameNode")
+            if (!nameNode.isNullOrEmpty()) {
+                this.nameNode = nameNode
+            }
+        }
         //                clickAction(nodeInfo, "com.shenhuaqihuo.pbmobile:id/rl_btn_buy")
 //                clickAction(nodeInfo, "com.shenhuaqihuo.pbmobile:id/rl_btn_sell")
 //                clickAction(nodeInfo, "com.shenhuaqihuo.pbmobile:id/btn_pos")
