@@ -46,16 +46,13 @@ class AccessibilityService : AccessibilityService() {
         }
 
         when (event.eventType) {
-            AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
+            AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> {
                 val nodeItemList = nodeInfo.findAccessibilityNodeInfosByViewId("com.shenhuaqihuo.pbmobile:id/rl_qh_cj_tab")
                 if (!nodeItemList.isNullOrEmpty() && nodeItemList.size > currentSize) {
                     name = getLastText(nodeInfo, "com.shenhuaqihuo.pbmobile:id/pb_tv_qh_cjname")
                     direction = getLastText(nodeInfo, "com.shenhuaqihuo.pbmobile:id/pb_tv_qh_cj_fx")
                     price = getLastText(nodeInfo, "com.shenhuaqihuo.pbmobile:id/tv_qh_cj_price")
                     num = getLastText(nodeInfo, "com.shenhuaqihuo.pbmobile:id/pb_tv_qh_cj_shuliang")
-//                clickAction(nodeInfo, "com.shenhuaqihuo.pbmobile:id/rl_btn_buy")
-//                clickAction(nodeInfo, "com.shenhuaqihuo.pbmobile:id/rl_btn_sell")
-//                clickAction(nodeInfo, "com.shenhuaqihuo.pbmobile:id/btn_pos")
                     Log.d(TAG, "onAccessibilityEvent: $name---$direction--$price--$num")
                     if (name?.isNotEmpty() == true && direction?.isNotEmpty() == true || price?.isNotEmpty() == true || num?.isNotEmpty() == true) {
                         val toJson = GsonUtils.toJson(MsgBean(name!!, direction!!, price!!, num!!))

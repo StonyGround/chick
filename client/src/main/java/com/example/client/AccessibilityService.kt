@@ -46,7 +46,12 @@ class AccessibilityService : AccessibilityService() {
             val msg = MsgBean("豆粕2301", "买开", "4033", "1")
             Log.d(TAG, "onEvent: $msg")
             if (!nameNode.isNullOrEmpty()) {
-                setTextArgument(nameNode!![0], msg.name)
+                for (node in nameNode!!) {
+                    if (node.text.equals(msg.name)) {
+                        Log.d(TAG, "z============: ")
+                        node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                    }
+                }
             }
 
 //            val priceNode = nodeInfo!!.findAccessibilityNodeInfosByViewId("com.shenhuaqihuo.pbmobile:id/edit_price")
@@ -67,7 +72,7 @@ class AccessibilityService : AccessibilityService() {
 
     @SuppressLint("SwitchIntDef")
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-//        Log.d(TAG, "onAccessibilityEvent")
+
         if (event == null) return
         nodeInfo = when {
             event.source != null -> event.source
@@ -82,7 +87,7 @@ class AccessibilityService : AccessibilityService() {
         }
         if (this.nameNode.isNullOrEmpty()) {
             val nameNode =
-                nodeInfo!!.findAccessibilityNodeInfosByViewId("com.shenhuaqihuo.pbmobile:id/tv_contract_name")
+                nodeInfo!!.findAccessibilityNodeInfosByViewId("com.shenhuaqihuo.pbmobile:id/pb_tv_qh_cjname")
             Log.d(TAG, "onAccessibilityEvent: $nameNode")
             if (!nameNode.isNullOrEmpty()) {
                 this.nameNode = nameNode
