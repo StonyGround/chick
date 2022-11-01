@@ -4,12 +4,11 @@ import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import com.blankj.utilcode.util.ConvertUtils
+import com.blankj.utilcode.util.GsonUtils
 import com.blankj.utilcode.util.ScreenUtils
 import com.example.client.AccessibilityUtil.createClick
 import com.github.promeg.pinyinhelper.Pinyin
@@ -28,8 +27,7 @@ class AccessibilityService : AccessibilityService() {
     private var nameNode: MutableList<AccessibilityNodeInfo>? = null
     private val TAG: String = "AccessibilityService"
 
-    private var name: String? = null
-    private var direction: String? = null
+    private var targetDirection: Int? = 0
     private var price: String? = null
     private var num: String? = null
     private var nodeInfo: AccessibilityNodeInfo? = null
@@ -66,16 +64,19 @@ class AccessibilityService : AccessibilityService() {
     private var msg: MsgBean? = null
     private var isFindResult: Boolean = false
 
+    private var isRunning: Boolean = false
+
     override fun onInterrupt() {}
 
     override fun onServiceConnected() {
         super.onServiceConnected()
         Log.d(TAG, "onServiceConnected: ")
-        EventBus.getDefault().post(MessageEvent("无障碍开启成功"))
+        EventBus.getDefault().post(MessageEvent("脚本开启成功"))
         EventBus.getDefault().register(this)
-        Handler(Looper.myLooper()!!).postDelayed(kotlinx.coroutines.Runnable {
-            EventBus.getDefault().post(DataEvent("无障碍开启成功"))
-        }, 10000)
+//        Handler(Looper.myLooper()!!).postDelayed(kotlinx.coroutines.Runnable {
+//            EventBus.getDefault()
+//                .post(DataEvent("{\"direction\":1,\"name\":\"豆粕2301\",\"num\":\"5\",\"price\":\"4033\"}"))
+//        }, 10000)
         initCoordinate()
     }
 
@@ -127,18 +128,12 @@ class AccessibilityService : AccessibilityService() {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(event: DataEvent) {
+        isRunning = true
+        isFindResult = false
         try {
-//            val msg = GsonUtils.fromJson(event.msg, MsgBean::class.java)
-            msg = MsgBean("豆粕2301", "买开", "4033", "1")
-            Log.d(TAG, "onEvent: $msg---$nameNode")
+            msg = GsonUtils.fromJson(event.msg, MsgBean::class.java)
+            Log.d(TAG, "onEvent: $msg---$this")
             if (!nameNode.isNullOrEmpty()) {
-//                for (node in nameNode!!) {
-//                    if (node.text.equals(msg.name)) {
-//                        Log.d(TAG, "z============: ")
-//                        node.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-//                    }
-//                }
-//                setTextArgument(nameNode!![0], msg.name)
 
                 CoroutineScope(Dispatchers.IO).launch {
                     // 点击输入框出现键盘
@@ -147,7 +142,7 @@ class AccessibilityService : AccessibilityService() {
                             super.onCompleted(gestureDescription)
                         }
                     })
-                    delay(500)
+                    delay(300)
 
                     // 点击拼音
                     val split = Pinyin.toPinyin(msg!!.name, "").flatMap { listOf(it.toString()) }
@@ -159,18 +154,9 @@ class AccessibilityService : AccessibilityService() {
                     }
                 }
             }
-
-//            val priceNode = nodeInfo!!.findAccessibilityNodeInfosByViewId("com.shenhuaqihuo.pbmobile:id/edit_price")
-//            if (!priceNode.isNullOrEmpty()) {
-//                setTextArgument(priceNode[0], msg.price)
-//            }
-//
-//            val numNode = nodeInfo!!.findAccessibilityNodeInfosByViewId("com.shenhuaqihuo.pbmobile:id/edit_quantity")
-//            if (!numNode.isNullOrEmpty()) {
-//                setTextArgument(numNode[0], msg.num)
-//            }
         } catch (e: Exception) {
             msg = null
+            isRunning = false
             Log.e(TAG, "fromJson: " + e.message)
             EventBus.getDefault().post(MessageEvent("错误：" + e.message))
         }
@@ -198,9 +184,7 @@ class AccessibilityService : AccessibilityService() {
         if (this.nameNode.isNullOrEmpty()) {
             this.nameNode =
                 nodeInfo!!.findAccessibilityNodeInfosByViewId("com.shenhuaqihuo.pbmobile:id/tv_contract_name")
-//                nodeInfo!!.findAccessibilityNodeInfosByViewId("com.hexin.android.futures:id/tv_type")
         }
-
         // 搜索结果
         if (msg != null) {
             val searchNameNode =
@@ -210,29 +194,93 @@ class AccessibilityService : AccessibilityService() {
                     if (node.text.contains(msg!!.name)) {
                         Log.d(TAG, "onAccessibilityEvent: ${node.text}")
                         isFindResult = true
+
+                        //点击搜索结果
                         createClick(node)
+
+                        Thread.sleep(200)
+                        // 输入价格
+                        Log.d(TAG, "onAccessibilityEvent msg: $msg")
+                        for (i in 1 until msg!!.num.toInt()) {
+                            clickAction(
+                                nodeInfo!!,
+                                "com.shenhuaqihuo.pbmobile:id/iv_add_quantity",
+                            )
+                            Thread.sleep(100)
+                        }
+
+                        when (msg!!.direction) {
+                            1 -> {
+                                clickAction(
+                                    nodeInfo!!,
+                                    "com.shenhuaqihuo.pbmobile:id/rb_open_pos"
+                                )
+                                Thread.sleep(200)
+                                clickAction(
+                                    nodeInfo!!,
+                                    "com.shenhuaqihuo.pbmobile:id/rl_btn_sell"
+                                )
+                            }
+                            2 -> {
+                                clickAction(
+                                    nodeInfo!!,
+                                    "com.shenhuaqihuo.pbmobile:id/rb_open_pos"
+                                )
+                                Thread.sleep(200)
+                                clickAction(
+                                    nodeInfo!!,
+                                    "com.shenhuaqihuo.pbmobile:id/rl_btn_buy"
+                                )
+                            }
+                            3 -> {
+                                clickAction(
+                                    nodeInfo!!,
+                                    "com.shenhuaqihuo.pbmobile:id/rb_close_pos"
+                                )
+                                Thread.sleep(200)
+                                clickAction(
+                                    nodeInfo!!,
+                                    "com.shenhuaqihuo.pbmobile:id/rl_btn_sell"
+                                )
+                            }
+                            4 -> {
+                                clickAction(
+                                    nodeInfo!!,
+                                    "com.shenhuaqihuo.pbmobile:id/rb_close_pos"
+                                )
+                                Thread.sleep(200)
+                                clickAction(
+                                    nodeInfo!!,
+                                    "com.shenhuaqihuo.pbmobile:id/rl_btn_buy"
+                                )
+                            }
+                        }
+//                        Thread.sleep(200)
+//                        clickAction(nodeInfo!!, "com.shenhuaqihuo.pbmobile:id/btn_pos")
                         break
                     }
                 }
             }
         }
-        //com.shenhuaqihuo.pbmobile:id/pb_qh_contract_name_search_name
-        //                clickAction(nodeInfo, "com.shenhuaqihuo.pbmobile:id/rl_btn_buy")
+    }
+
+    // com.shenhuaqihuo.pbmobile:id/iv_reduce_quantity
+    // com.shenhuaqihuo.pbmobile:id/iv_add_quantity
+    // com.shenhuaqihuo.pbmobile:id/rb_open_pos
+    // com.shenhuaqihuo.pbmobile:id/rb_close_pos
+    //com.shenhuaqihuo.pbmobile:id/pb_qh_contract_name_search_name
+    //                clickAction(nodeInfo, "com.shenhuaqihuo.pbmobile:id/rl_btn_buy")
 //                clickAction(nodeInfo, "com.shenhuaqihuo.pbmobile:id/rl_btn_sell")
 //                clickAction(nodeInfo, "com.shenhuaqihuo.pbmobile:id/btn_pos")
-        // com.shenhuaqihuo.pbmobile:id/edit_price
-        // com.shenhuaqihuo.pbmobile:id/edit_quantity
-        // com.shenhuaqihuo.pbmobile:id/tv_contract_name
-
-
-    }
+    // com.shenhuaqihuo.pbmobile:id/edit_price
+    // com.shenhuaqihuo.pbmobile:id/edit_quantity
+    // com.shenhuaqihuo.pbmobile:id/tv_contract_name
 
     private fun clickAction(nodeInfo: AccessibilityNodeInfo, s: String) {
         val nodeList =
             nodeInfo.findAccessibilityNodeInfosByViewId(s)
         if (!nodeList.isNullOrEmpty()) {
             nodeList[0].performAction(AccessibilityNodeInfo.ACTION_CLICK)
-            nodeInfo.recycle()
         }
     }
 

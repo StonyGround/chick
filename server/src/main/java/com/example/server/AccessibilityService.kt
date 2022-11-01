@@ -55,7 +55,25 @@ class AccessibilityService : AccessibilityService() {
                     num = getLastText(nodeInfo, "com.shenhuaqihuo.pbmobile:id/pb_tv_qh_cj_shuliang")
                     Log.d(TAG, "onAccessibilityEvent: $name---$direction--$price--$num")
                     if (name?.isNotEmpty() == true && direction?.isNotEmpty() == true || price?.isNotEmpty() == true || num?.isNotEmpty() == true) {
-                        val toJson = GsonUtils.toJson(MsgBean(name!!, direction!!, price!!, num!!))
+                        val targetDirection = when (direction) {
+                            "买开" -> {
+                                1
+                            }
+                            "卖开" -> {
+                                2
+                            }
+                            "买平" -> {
+                                3
+                            }
+                            "卖平" -> {
+                                4
+                            }
+                            else -> {
+                                0
+                            }
+                        }
+                        val toJson =
+                            GsonUtils.toJson(MsgBean(name!!, targetDirection, price!!, num!!))
                         WebSocketServer.Send(toJson)
                     }
 

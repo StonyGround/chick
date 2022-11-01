@@ -10,6 +10,8 @@ import org.junit.Test
 class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {
-
+        for (i in 1 until 2) {
+            println(i)
+        }
     }
 }

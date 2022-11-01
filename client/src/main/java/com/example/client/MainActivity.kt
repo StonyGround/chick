@@ -26,7 +26,6 @@ class MainActivity : AppCompatActivity() {
 
     // At the top level of your kotlin file:
 
-
     lateinit var input: AppCompatEditText
     lateinit var btn: AppCompatButton
     lateinit var textView: AppCompatTextView
@@ -63,7 +62,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    fun onEvent(event: MessageEvent) {
+    fun onEvent(event: DataEvent) {
         textView.append(event.msg + "\n")
     }
 

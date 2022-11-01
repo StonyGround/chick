@@ -10,6 +10,17 @@ import android.view.accessibility.AccessibilityNodeInfo
 object AccessibilityUtil {
     private const val TAG = "MyAccessibilityService"
 
+    fun AccessibilityService.createClick(
+        nodeInfo: AccessibilityNodeInfo,
+        id: String,
+        callback: AccessibilityService.GestureResultCallback? = null
+    ) {
+        val nodeList =
+            nodeInfo.findAccessibilityNodeInfosByViewId(id)
+        if (!nodeList.isNullOrEmpty()) {
+            createClick(nodeList[0], callback)
+        }
+    }
 
     /**
      * 创建点击事件
