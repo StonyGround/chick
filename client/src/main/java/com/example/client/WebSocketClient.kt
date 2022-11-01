@@ -10,7 +10,7 @@ import java.net.URI
 class WebSocketClient(serverUri: URI?) : org.java_websocket.client.WebSocketClient(serverUri) {
 
     override fun onOpen(handshakedata: ServerHandshake) {
-        EventBus.getDefault().post(MessageEvent("成功连接到：$remoteSocketAddress"))
+        EventBus.getDefault().post(DataEvent("成功连接到：$remoteSocketAddress"))
     }
 
     override fun onMessage(message: String) {
@@ -20,13 +20,13 @@ class WebSocketClient(serverUri: URI?) : org.java_websocket.client.WebSocketClie
 
     override fun onClose(code: Int, reason: String, remote: Boolean) {
         Log.d("WebSocketClient", "onClose")
-        EventBus.getDefault().post(MessageEvent("onClose：$reason"))
+        EventBus.getDefault().post(DataEvent("onClose：$reason"))
         Reconnect()
     }
 
     override fun onError(ex: Exception) {
         Log.d("WebSocketClient", "onError")
-        EventBus.getDefault().post(MessageEvent("onError：$ex"))
+        EventBus.getDefault().post(DataEvent("onError：$ex"))
         Reconnect()
     }
 

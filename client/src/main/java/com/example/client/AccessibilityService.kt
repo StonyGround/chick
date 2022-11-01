@@ -255,8 +255,8 @@ class AccessibilityService : AccessibilityService() {
                                 )
                             }
                         }
-//                        Thread.sleep(200)
-//                        clickAction(nodeInfo!!, "com.shenhuaqihuo.pbmobile:id/btn_pos")
+                        Thread.sleep(200)
+                        clickAction(nodeInfo!!, "com.shenhuaqihuo.pbmobile:id/btn_pos")
                         break
                     }
                 }

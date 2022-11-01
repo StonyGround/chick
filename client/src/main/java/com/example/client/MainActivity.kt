@@ -1,8 +1,10 @@
 package com.example.client
 
 import android.content.Context
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.appcompat.widget.AppCompatTextView
@@ -17,6 +19,7 @@ import kotlinx.coroutines.flow.map
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
+
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 val EXAMPLE_COUNTER = stringPreferencesKey("example_counter")
@@ -56,6 +59,11 @@ class MainActivity : AppCompatActivity() {
                     settings[EXAMPLE_COUNTER] = ip
                 }
             }
+        }
+
+        findViewById<AppCompatButton>(R.id.setting).setOnClickListener {
+            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+            startActivity(intent)
         }
 
         EventBus.getDefault().register(this)
