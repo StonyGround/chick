@@ -1,12 +1,10 @@
 package com.example.client
 
-import androidx.test.platform.app.InstrumentationRegistry
+import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
-
+import com.github.promeg.pinyinhelper.Pinyin
 import org.junit.Test
 import org.junit.runner.RunWith
-
-import org.junit.Assert.*
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -17,8 +15,9 @@ import org.junit.Assert.*
 class ExampleInstrumentedTest {
     @Test
     fun useAppContext() {
-        // Context of the app under test.
-        val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.example.client", appContext.packageName)
+        val toPinyin = Pinyin.toPinyin("豆粕2391", "").flatMap {
+            listOf(it)
+        }
+        Log.d("TAG", "useAppContext: $toPinyin")
     }
 }

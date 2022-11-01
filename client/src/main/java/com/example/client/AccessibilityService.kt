@@ -9,7 +9,14 @@ import android.os.Looper
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import com.blankj.utilcode.util.ConvertUtils
+import com.blankj.utilcode.util.ScreenUtils
 import com.example.client.AccessibilityUtil.createClick
+import com.github.promeg.pinyinhelper.Pinyin
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -29,6 +36,36 @@ class AccessibilityService : AccessibilityService() {
 
     private var currentSize: Int = 0
 
+    private val map = mutableMapOf<String, Coordinate>()
+    private val numLine = arrayOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
+    private val q_p = arrayOf("Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P")
+    private val a_l = arrayOf("A", "S", "D", "F", "G", "H", "J", "K", "L")
+    private val z_m = arrayOf("Z", "X", "C", "V", "B", "N", "M")
+
+    //按键间距
+    private val btnMarginY = ConvertUtils.dp2px(10f)
+    private val btnMarginX = ConvertUtils.dp2px(6f)
+
+    // 按键高
+    private val btnHeight = ConvertUtils.dp2px(40f)
+
+    // 按键宽
+    private val btnWidth = ConvertUtils.dp2px(31f)
+    private val btnNumWidth = ConvertUtils.dp2px(30f)
+
+    // shift按键宽
+    private val btnShiftWidth = ConvertUtils.dp2px(40f)
+
+    // 键盘底部空白高
+    private val keyboardBottomHeight = ConvertUtils.dp2px(20f)
+
+    // 当前高度
+    private var currentY = ScreenUtils.getScreenHeight().toFloat()
+    private var currentX = 0f
+
+    private var msg: MsgBean? = null
+    private var isFindResult: Boolean = false
+
     override fun onInterrupt() {}
 
     override fun onServiceConnected() {
@@ -39,14 +76,61 @@ class AccessibilityService : AccessibilityService() {
         Handler(Looper.myLooper()!!).postDelayed(kotlinx.coroutines.Runnable {
             EventBus.getDefault().post(DataEvent("无障碍开启成功"))
         }, 10000)
+        initCoordinate()
+    }
+
+
+    /**
+     *  按键高120px 宽99px x间距15px y间距30px
+     */
+    private fun initCoordinate() {
+
+        // 定位到z键
+        // - 键盘底部 - 快搜行 - 1个y边距 - 一半高
+        currentY =
+            currentY - keyboardBottomHeight - btnHeight - btnMarginY - btnHeight / 2
+        currentX += btnMarginX / 2 + btnShiftWidth + btnMarginX + btnWidth / 2
+        // 最底部
+        for (value in z_m) {
+            map[value] = Coordinate(currentX, currentY)
+            currentX += btnWidth + btnMarginX
+        }
+
+        // 重新定位到a按键
+        currentX = 0f
+        currentX += btnMarginX * 2 + btnWidth / 2
+        currentY = currentY - btnMarginY - btnHeight
+        for (value in a_l) {
+            map[value] = Coordinate(currentX, currentY)
+            currentX += btnWidth + btnMarginX
+        }
+
+        // 重新定位到q按键
+        currentX = 0f
+        currentX += btnMarginX / 2 + btnNumWidth / 2
+        currentY = currentY - btnMarginY - btnHeight
+        for (value in q_p) {
+            map[value] = Coordinate(currentX, currentY)
+            currentX += btnNumWidth + btnMarginX
+        }
+
+        // 重新定位到1按键
+        currentX = 0f
+        currentX += btnMarginX / 2 + btnNumWidth / 2
+        currentY = currentY - btnMarginY - btnHeight
+        for (value in numLine) {
+            map[value] = Coordinate(currentX, currentY)
+            currentX += btnNumWidth + btnMarginX
+        }
+        Log.d(TAG, "initCoordinate: $map")
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onEvent(event: DataEvent) {
         try {
 //            val msg = GsonUtils.fromJson(event.msg, MsgBean::class.java)
-            val msg = MsgBean("豆粕2301", "买开", "4033", "1")
-            Log.d(TAG, "onEvent: $msg")
+            msg = MsgBean("豆粕2301", "买开", "4033", "1")
+            Log.d(TAG, "onEvent: $msg---$nameNode")
             if (!nameNode.isNullOrEmpty()) {
 //                for (node in nameNode!!) {
 //                    if (node.text.equals(msg.name)) {
@@ -55,13 +139,25 @@ class AccessibilityService : AccessibilityService() {
 //                    }
 //                }
 //                setTextArgument(nameNode!![0], msg.name)
-                // 点击输入框出现键盘
-                createClick(nameNode!![0], object : GestureResultCallback() {
-                    override fun onCompleted(gestureDescription: GestureDescription?) {
-                        super.onCompleted(gestureDescription)
 
+                CoroutineScope(Dispatchers.IO).launch {
+                    // 点击输入框出现键盘
+                    createClick(nameNode!![0], object : GestureResultCallback() {
+                        override fun onCompleted(gestureDescription: GestureDescription?) {
+                            super.onCompleted(gestureDescription)
+                        }
+                    })
+                    delay(500)
+
+                    // 点击拼音
+                    val split = Pinyin.toPinyin(msg!!.name, "").flatMap { listOf(it.toString()) }
+                    for (item in split) {
+                        if (!isFindResult) {
+                            map[item]?.let { createClick(it.x, map[item]!!.y) }
+                            delay(200)
+                        }
                     }
-                })
+                }
             }
 
 //            val priceNode = nodeInfo!!.findAccessibilityNodeInfosByViewId("com.shenhuaqihuo.pbmobile:id/edit_price")
@@ -74,6 +170,7 @@ class AccessibilityService : AccessibilityService() {
 //                setTextArgument(numNode[0], msg.num)
 //            }
         } catch (e: Exception) {
+            msg = null
             Log.e(TAG, "fromJson: " + e.message)
             EventBus.getDefault().post(MessageEvent("错误：" + e.message))
         }
@@ -95,15 +192,31 @@ class AccessibilityService : AccessibilityService() {
             Log.e(TAG, "nodeInfo is null")
             return
         }
-//        if (this.nameNode.isNullOrEmpty()) {
-        val nameNode =
-            nodeInfo!!.findAccessibilityNodeInfosByViewId("com.shenhuaqihuo.pbmobile:id/tv_contract_name")
+//        Log.d(TAG, "onAccessibilityEvent: $nameNode")
+
+        // 合约代码输入框
+        if (this.nameNode.isNullOrEmpty()) {
+            this.nameNode =
+                nodeInfo!!.findAccessibilityNodeInfosByViewId("com.shenhuaqihuo.pbmobile:id/tv_contract_name")
 //                nodeInfo!!.findAccessibilityNodeInfosByViewId("com.hexin.android.futures:id/tv_type")
-//            if (!nameNode.isNullOrEmpty()) {
-        Log.d(TAG, "onAccessibilityEvent: $nameNode")
-        this.nameNode = nameNode
-//            }
-//        }
+        }
+
+        // 搜索结果
+        if (msg != null) {
+            val searchNameNode =
+                nodeInfo!!.findAccessibilityNodeInfosByViewId("com.shenhuaqihuo.pbmobile:id/pb_qh_contract_name_search_name")
+            if (!searchNameNode.isNullOrEmpty()) {
+                for (node in searchNameNode) {
+                    if (node.text.contains(msg!!.name)) {
+                        Log.d(TAG, "onAccessibilityEvent: ${node.text}")
+                        isFindResult = true
+                        createClick(node)
+                        break
+                    }
+                }
+            }
+        }
+        //com.shenhuaqihuo.pbmobile:id/pb_qh_contract_name_search_name
         //                clickAction(nodeInfo, "com.shenhuaqihuo.pbmobile:id/rl_btn_buy")
 //                clickAction(nodeInfo, "com.shenhuaqihuo.pbmobile:id/rl_btn_sell")
 //                clickAction(nodeInfo, "com.shenhuaqihuo.pbmobile:id/btn_pos")
@@ -132,4 +245,5 @@ class AccessibilityService : AccessibilityService() {
         )
         node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments)
     }
+
 }
