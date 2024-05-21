@@ -1,9 +1,0 @@
-<resources>
-    <string name="app_name">客户端</string>
-    <string name="input_ip">输入服务端ip</string>
-    <string name="connect">连接</string>
-
-    <string name="accessibility_service_description">客户端无障碍执行</string>
-    <string name="accessibility_service_label">客户端无障碍</string>
-    <string name="open_setting">打开无障碍</string>
-</resources>

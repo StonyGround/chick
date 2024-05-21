@@ -1,9 +1,12 @@
 package com.example.server
 
+import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatButton
 import com.blankj.utilcode.util.GsonUtils
 import com.blankj.utilcode.util.NetworkUtils
 import org.greenrobot.eventbus.EventBus
@@ -20,7 +23,7 @@ class MainActivity : AppCompatActivity() {
         textView = findViewById(R.id.textView)
         findViewById<Button>(R.id.btn).setOnClickListener {
             val toJson =
-                GsonUtils.toJson(MsgBean("豆粕2301", 1, "10000", "5"))
+                GsonUtils.toJson(MsgBean("豆粕2407", 1, "10000", "5"))
             WebSocketServer.Send(toJson)
         }
 
@@ -32,6 +35,11 @@ class MainActivity : AppCompatActivity() {
             append("\n")
         }
         WebSocketServer.ready(ip)
+
+        findViewById<AppCompatButton>(R.id.setting).setOnClickListener {
+            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+            startActivity(intent)
+        }
 
         EventBus.getDefault().register(this)
     }

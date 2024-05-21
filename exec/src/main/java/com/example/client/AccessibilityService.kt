@@ -11,7 +11,6 @@ import com.blankj.utilcode.util.ConvertUtils
 import com.blankj.utilcode.util.GsonUtils
 import com.blankj.utilcode.util.ScreenUtils
 import com.example.client.AccessibilityUtil.createClick
-import com.github.promeg.pinyinhelper.Pinyin
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -22,8 +21,10 @@ import org.greenrobot.eventbus.ThreadMode
 
 
 class AccessibilityService : AccessibilityService() {
+    //todo 人物队列
 
-
+    private var haveCodeInput: Boolean = false
+    private var codeInput: MutableList<AccessibilityNodeInfo>? = null
     private var nameNode: MutableList<AccessibilityNodeInfo>? = null
     private val TAG: String = "AccessibilityService"
 
@@ -145,13 +146,14 @@ class AccessibilityService : AccessibilityService() {
                     delay(300)
 
                     // 点击拼音
-                    val split = Pinyin.toPinyin(msg!!.name, "").flatMap { listOf(it.toString()) }
-                    for (item in split) {
-                        if (!isFindResult) {
-                            map[item]?.let { createClick(it.x, map[item]!!.y) }
-                            delay(200)
-                        }
-                    }
+//                    val split = Pinyin.toPinyin(msg!!.name, "").flatMap { listOf(it.toString()) }
+//                    Log.d(TAG, "onEvent: $split")
+//                    for (item in split) {
+//                        if (!isFindResult) {
+//                            map[item]?.let { createClick(it.x, map[item]!!.y) }
+//                            delay(200)
+//                        }
+//                    }
                 }
             }
         } catch (e: Exception) {
@@ -179,6 +181,26 @@ class AccessibilityService : AccessibilityService() {
             return
         }
 //        Log.d(TAG, "onAccessibilityEvent: $nameNode")
+
+        //todo 重置haveCodeInput
+        if (!haveCodeInput) {
+            codeInput =
+                nodeInfo!!.findAccessibilityNodeInfosByViewId("com.shenhuaqihuo.pbmobile:id/edit_public_head_middle")
+            if (!codeInput.isNullOrEmpty()) {
+                Log.d(TAG, "codeInput: ")
+                haveCodeInput = true
+                codeInput!![0].performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, Bundle().apply {
+                    putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, "")
+                })
+                // 输入新内容
+                codeInput!![0].performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, Bundle().apply {
+                    putCharSequence(
+                        AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                        msg!!.name
+                    )
+                })
+            }
+        }
 
         // 合约代码输入框
         if (this.nameNode.isNullOrEmpty()) {

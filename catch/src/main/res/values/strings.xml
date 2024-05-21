@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">抓取端</string>
+    <string name="local_ip">本机ip：</string>
+    <string name="accessibility_service_description">抓取端无障碍抓取数据</string>
+    <string name="accessibility_service_label">抓取端无障碍</string>
+</resources>
